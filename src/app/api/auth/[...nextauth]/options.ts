@@ -29,10 +29,11 @@ export const authOptions: NextAuthOptions = {
                         throw new Error("User is not verified, pls verify")
                     }
                     const isPasswordCorrect = await bcrypt.compare(credentials.password, user.password)
+                    // credentials.password returns plain passwrod text which the user enters during login and  user.password returns hashed password from database
                     if (isPasswordCorrect) {
                         return user
                     }
-                    else{
+                    else {
                         throw new Error("incorrect password")
                     }
                 } catch (error: any) {
@@ -40,5 +41,32 @@ export const authOptions: NextAuthOptions = {
                 }
             }
         })
-    ]
+    ],
+    pages: {
+        signIn: "/sign-in"
+    },
+    session: {
+        strategy: "jwt"
+    },
+    callbacks: {
+        async jwt({ token, user, }) {
+            if (user) {
+                token._id = user._id?.toString();
+                token.isVerified = user.isVerified;
+                token.isAcceptingMessages = user.isAcceptingMessages;
+                token.username = user.username;
+            }
+            return token
+        },
+        async session({ session, token }) {
+            if(token){
+                session.user._id = token._id
+                session.user.isVerified =token.isVerified
+                session.user.isAcceptingMessages = token.isAcceptingMessages
+                session.user.username = token.username
+            }
+            return session
+        },
+    },
+    secret: process.env.NEXTAUTH_SECRET
 }
