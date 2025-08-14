@@ -22,6 +22,8 @@ export const authOptions: NextAuthOptions = {
                             { username: credentials.identifier },
                         ]
                     })
+                    console.log(user);
+                    
                     if (!user) {
                         throw new Error("user not found ")
                     }
