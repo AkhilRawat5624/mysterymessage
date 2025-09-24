@@ -19,7 +19,7 @@ const Navbar = () => {
                         </>
                     ) : (
                         <>
-                            <Link href="/sign-in" className="w-full md:w-auto bg-slate-100 text-black"><button>Login</button></Link></>
+                            <Link href="/sign-in" className="w-full md:w-auto bg-slate-100 text-black p-2 rounded-lg"><button className='w-24 cursor-pointer'>Login</button></Link></>
                     )
                 }
             </div>
