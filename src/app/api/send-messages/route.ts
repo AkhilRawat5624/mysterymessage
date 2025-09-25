@@ -6,7 +6,7 @@ import { Message } from "@/model/user.model";
 export async function POST(req: Request) {
     await dbConnect();
 
-    const { username, Content } = await req.json()
+    const { username, content } = await req.json()
     try {
         const user = await UserModel.findOne({ username })
 
@@ -22,8 +22,8 @@ export async function POST(req: Request) {
                 message: "user is not accepting messages"
             }, { status: 403 })
         }
-        const newMessage = { Content, createdAt: new Date() }
-
+        const newMessage = { content, createdAt: new Date() }
+        console.log(newMessage,"message structure")
         user.messages.push(newMessage as Message);
 
         await user.save();

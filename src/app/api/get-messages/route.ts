@@ -31,7 +31,7 @@ export async function GET(req: Request) {
             {
                 $sort: { 'messages.createdAt': -1 }
             },
-            { $group: { _id: '$_id', messages: { $push: "messages" } } }
+            { $group: { _id: '$_id', messages: { $push: "$messages" } } }
         ])
         if (!user || user.length == 0) {
             return Response.json({
