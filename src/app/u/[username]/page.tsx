@@ -8,7 +8,6 @@ import { Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { CardHeader, CardContent, Card } from '@/components/ui/card';
-import { useCompletion } from '@ai-sdk/react'
 import {
     Form,
     FormControl,
@@ -17,7 +16,6 @@ import {
     FormLabel,
     FormMessage,
 } from '@/components/ui/form';
-
 import * as z from 'zod';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
@@ -39,15 +37,9 @@ export default function SendMessage() {
     const params = useParams<{ username: string }>();
     const username = params.username;
 
-    const {
-        complete,
-        completion,
-        isLoading: isSuggestLoading,
-        error,
-    } = useCompletion({
-        api: '/api/suggest-messages',
-        initialCompletion: initialMessageString,
-    });
+    const [suggestedMessages, setSuggestedMessages] = useState<string[]>(parseStringMessages(initialMessageString));
+    const [isSuggestLoading, setIsSuggestLoading] = useState(false);
+    const [suggestError, setSuggestError] = useState<string | null>(null);
 
     const form = useForm<z.infer<typeof messageSchema>>({
         resolver: zodResolver(messageSchema),
@@ -68,25 +60,30 @@ export default function SendMessage() {
                 ...data,
                 username,
             });
-
             toast(response.data.message);
             form.reset({ ...form.getValues(), content: '' });
         } catch (error) {
             const axiosError = error as AxiosError<ApiResponse>;
             toast("error", {
-                description: axiosError.response?.data.message ?? 'Failed to sent message',
-            })
+                description: axiosError.response?.data.message ?? 'Failed to send message',
+            });
         } finally {
             setIsLoading(false);
         }
     };
 
     const fetchSuggestedMessages = async () => {
+        setIsSuggestLoading(true);
+        setSuggestError(null);
         try {
-            complete('');
+            const response = await axios.post<{ message: string }>('/api/suggest-messages');
+            const messages = parseStringMessages(response.data.message);
+            setSuggestedMessages(messages);
         } catch (error) {
             console.error('Error fetching messages:', error);
-            // Handle error appropriately
+            setSuggestError('Failed to fetch suggested messages');
+        } finally {
+            setIsSuggestLoading(false);
         }
     };
 
@@ -145,10 +142,10 @@ export default function SendMessage() {
                         <h3 className="text-xl font-semibold">Messages</h3>
                     </CardHeader>
                     <CardContent className="flex flex-col space-y-4">
-                        {error ? (
-                            <p className="text-red-500">{error.message}</p>
+                        {suggestError ? (
+                            <p className="text-red-500">{suggestError}</p>
                         ) : (
-                            parseStringMessages(completion).map((message, index) => (
+                            suggestedMessages.map((message, index) => (
                                 <Button
                                     key={index}
                                     variant="outline"

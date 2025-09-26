@@ -22,6 +22,10 @@ const Dashboard = () => {
 
   const { data: session, status } = useSession();
 
+  const handleMessageUpdate = (updatedMessage: Message) => {
+  setMessages(messages.map((msg) => (msg._id === updatedMessage._id ? updatedMessage : msg)));
+};
+
   const handleDeleteMessage = (messageId: string) => {
     setMessages(messages.filter((message) => message._id !== messageId));
   };
@@ -36,7 +40,7 @@ const Dashboard = () => {
     setIsSwitchLoading(true);
     try {
       const response = await axios.get<ApiResponse>("/api/accept-messages");
-      setValue("acceptingMessages", response.data.isAcceptingMessages);
+      setValue("acceptingMessages", response.data.isAcceptingMessages ?? false);
     } catch (error) {
       const axiosError = error as AxiosError<ApiResponse>;
       toast("error", {
@@ -194,6 +198,7 @@ const Dashboard = () => {
               key={String(message._id)}
               message={message}
               onMessageDelete={handleDeleteMessage}
+              onMessageUpdate={handleMessageUpdate}
             />
           ))
         ) : (

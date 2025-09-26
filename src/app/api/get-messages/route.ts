@@ -3,51 +3,49 @@ import UserModel from "@/model/user.model";
 import { authOptions } from "../auth/[...nextauth]/options";
 import { getServerSession, User } from "next-auth";
 import mongoose from "mongoose";
+import { ApiResponse } from "@/types/apiResponse";
+import { NextResponse } from "next/server";
 
 
 export async function GET(req: Request) {
-    await dbConnect();
+  await dbConnect();
 
-    const session = await getServerSession(authOptions);
-    const user = session?.user as User
-    if (!session || !session.user) {
-        return Response.json({
-            success: false,
-            message: "not Authneticated"
-        }, { status: 401 })
-    }
-    const userId = new mongoose.Types.ObjectId(user._id)
-    try {
-        const user = await UserModel.aggregate([
-            {
-                $match: {
-                    _id: userId
-                },
+  const session = await getServerSession(authOptions);
+  const user = session?.user;
+  if (!session || !user) {
+    return NextResponse.json<ApiResponse>(
+      { success: false, message: 'Not authenticated' },
+      { status: 401 }
+    );
+  }
 
-            },
-            {
-                $unwind: "$messages"
-            },
-            {
-                $sort: { 'messages.createdAt': -1 }
-            },
-            { $group: { _id: '$_id', messages: { $push: "$messages" } } }
-        ])
-        if (!user || user.length == 0) {
-            return Response.json({
-                success: false,
-                message: "user does not exist"
-            }, { status: 401 })
-        }
-        return Response.json({
-            success: true,
-            messages: user[0].messages
-        }, { status: 200 })
-    } catch (error) {
-        console.error("error getting messaging", error)
-        return Response.json({
-            success: false,
-            message: "user does not exist"
-        }, { status: 500 })
+  const userId = new mongoose.Types.ObjectId(user._id);
+  try {
+    const user = await UserModel.findOne({ _id: userId })
+      .select('messages')
+      .lean(); // Convert to plain JavaScript object
+    if (!user) {
+      return NextResponse.json<ApiResponse>(
+        { success: false, message: 'User does not exist' },
+        { status: 404 }
+      );
     }
+
+    // Sort messages by createdAt in descending order
+    const sortedMessages = (user.messages || []).sort(
+      (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+    );
+
+    return NextResponse.json<ApiResponse>({
+      success: true,
+      messages: sortedMessages,
+      
+    });
+  } catch (error) {
+    console.error('Error fetching messages:', error);
+    return NextResponse.json<ApiResponse>(
+      { success: false, message: 'Failed to fetch messages' },
+      { status: 500 }
+    );
+  }
 }

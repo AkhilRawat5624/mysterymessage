@@ -70,5 +70,5 @@ export const authOptions: NextAuthOptions = {
             return session
         },
     },
-    secret: process.env.NEXTAUTH_SECRET || "openssl rand -base64 32"
+    secret: process.env.NEXTAUTH_SECRET 
 }
