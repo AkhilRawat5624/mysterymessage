@@ -20,7 +20,7 @@ import {
 } from '@/components/ui/alert-dialog';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
-import { X, Loader2 } from 'lucide-react';
+import { X, Loader2, LucideTrash } from 'lucide-react';
 import { Message } from '@/model/user.model';
 import axios, { AxiosError } from 'axios';
 import { ApiResponse } from '@/types/apiResponse';
@@ -37,6 +37,7 @@ const MessageCard = ({ message, onMessageDelete, onMessageUpdate }: MessageCardP
   const [replyContent, setReplyContent] = useState('');
   const [isReplying, setIsReplying] = useState(false);
   const [isSubmittingReply, setIsSubmittingReply] = useState(false);
+  const [isDeletingReply, setIsDeletingReply] = useState<string | null>(null); // Track which reply is being deleted
 
   const handleDeleteConfirm = async () => {
     try {
@@ -71,7 +72,7 @@ const MessageCard = ({ message, onMessageDelete, onMessageUpdate }: MessageCardP
         ...message,
         replies: [...(message.replies || []), { content: replyContent, createdAt: new Date() }],
       };
-      console.log("updated mesage log",updatedMessage);
+      console.log("updated message log", updatedMessage);
       onMessageUpdate(updatedMessage);
 
       setReplyContent('');
@@ -83,6 +84,29 @@ const MessageCard = ({ message, onMessageDelete, onMessageUpdate }: MessageCardP
       });
     } finally {
       setIsSubmittingReply(false);
+    }
+  };
+
+  const handleDeleteReplyMessage = async (replyId: string) => {
+    console.log("Deleting reply with ID:", replyId);
+    setIsDeletingReply(replyId);
+    try {
+      const response = await axios.delete<ApiResponse>(`/api/delete-reply-message/${replyId}`);
+      toast(response.data.message);
+
+      // Update local state to remove the deleted reply
+      const updatedMessage = {
+        ...message,
+        replies: (message.replies || []).filter(reply => reply._id !== replyId),
+      };
+      onMessageUpdate(updatedMessage);
+    } catch (error) {
+      const axiosError = error as AxiosError<ApiResponse>;
+      toast('Error', {
+        description: axiosError.response?.data.message ?? 'Failed to delete reply',
+      });
+    } finally {
+      setIsDeletingReply(null);
     }
   };
 
@@ -149,11 +173,26 @@ const MessageCard = ({ message, onMessageDelete, onMessageUpdate }: MessageCardP
           <div className="mt-4 w-full">
             <h4 className="text-sm font-semibold">Replies:</h4>
             {message.replies.map((reply, index) => (
-              <div key={index} className="mt-2 pl-4 border-l-2 border-gray-200">
-                <p className="text-gray-700">{reply.content}</p>
-                <p className="text-xs text-gray-500">
-                  {new Date(reply.createdAt).toLocaleString()}
-                </p>
+              <div key={reply._id || index} className="mt-2 pl-4 border-l-2 border-gray-200 flex justify-between">
+                <div>
+                  <p className="text-gray-700">{reply.content}</p>
+                  <p className="text-xs text-gray-500">
+                    {new Date(reply.createdAt).toLocaleString()}
+                  </p>
+                </div>
+                <div>
+                  <Button
+                    className="cursor-pointer p-1 bg-red-500 text-white rounded-md"
+                    onClick={() => handleDeleteReplyMessage(reply._id)}
+                    disabled={isDeletingReply === reply._id}
+                  >
+                    {isDeletingReply === reply._id ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                      <LucideTrash />
+                    )}
+                  </Button>
+                </div>
               </div>
             ))}
           </div>

@@ -4,6 +4,7 @@ export interface Message extends Document {
     content: string,
     createdAt: Date,
     replies?:{
+        _id: string
         content : string,
         createdAt: Date
     }[]

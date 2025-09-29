@@ -5,7 +5,7 @@ import { ApiResponse } from "@/types/apiResponse";
 import { getServerSession } from "next-auth";
 import { NextResponse } from "next/server";
 import { authOptions } from "../auth/[...nextauth]/options";
-
+import mongoose from "mongoose";
 export async function POST(request: Request) {
     console.log('Received POST request to /api/reply-message');
     try {
@@ -25,17 +25,22 @@ export async function POST(request: Request) {
                 { status: 400 }
             );
         }
-        const updatedMessage = await UserModel.findByIdAndUpdate(messageId, {
-            $push: {
-                replies: {
-                    content: replyContent,
-                    createdAt: new Date()
+        const userId = new mongoose.Types.ObjectId(session.user._id);
+        const messageObjectId = new mongoose.Types.ObjectId(messageId);
+
+        const updatedMessage = await UserModel.updateOne({
+            _id: userId, "messages._id": messageObjectId
+        },
+            {
+                $push: {
+                    "messages.$.replies": {
+                        content: replyContent,
+                        createdAt: new Date()
+                    }
                 }
             }
-        },
-            { new: true }
         );
-        if (!updatedMessage) {
+        if (updatedMessage.matchedCount == 0) {
             return NextResponse.json<ApiResponse>(
                 { success: false, message: "Message not found" },
                 { status: 404 }
