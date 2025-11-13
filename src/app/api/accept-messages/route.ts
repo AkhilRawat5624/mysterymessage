@@ -1,7 +1,6 @@
 import dbConnect from "@/lib/dbConnect";
 import { getServerSession, User } from "next-auth";
 import { authOptions } from "../auth/[...nextauth]/options";
-import { success } from "zod";
 import UserModel from "@/model/user.model";
 
 export async function POST(req: Request) {
@@ -33,6 +32,7 @@ export async function POST(req: Request) {
         }, { status: 200 })
 
     } catch (error) {
+        console.error('Error updating message acceptance status:', error);
         return Response.json({
             success: false,
             message: "User is not accepting messages"
@@ -40,7 +40,7 @@ export async function POST(req: Request) {
     }
 }
 
-export async function GET(req: Request) {
+export async function GET() {
     await dbConnect();
 
     const session = await getServerSession(authOptions);
@@ -65,6 +65,7 @@ export async function GET(req: Request) {
             isAcceptingMessages: foundUser.isAcceptingMessages
         }, { status: 200 })
     } catch (error) {
+        console.error('Error in getting message acceptance status:', error);
         return Response.json({
             success: false,
             message: "Error in getting message acceptance status"

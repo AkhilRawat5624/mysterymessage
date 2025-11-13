@@ -1,8 +1,9 @@
 import * as React from "react";
 import { cn } from "@/lib/utils"; // utility to merge classNames (same as shadcn)
 
-export interface InputProps
-  extends React.InputHTMLAttributes<HTMLInputElement> {}
+export type InputProps = React.InputHTMLAttributes<HTMLInputElement> & {
+  // Add any custom props here if needed
+}
 
 /**
  * A lightweight, shadcn-style Input component

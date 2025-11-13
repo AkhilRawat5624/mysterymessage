@@ -1,9 +1,8 @@
-import NextAuth, { NextAuthOptions } from "next-auth";
+import { NextAuthOptions } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 import bcrypt from "bcryptjs";
 import UserModel from "@/model/user.model";
 import dbConnect from "@/lib/dbConnect";
-import { id } from "zod/locales";
 export const authOptions: NextAuthOptions = {
     providers: [
         CredentialsProvider({
@@ -13,33 +12,48 @@ export const authOptions: NextAuthOptions = {
                 email: { label: "Email", type: "text" },
                 password: { label: "Password", type: "password" }
             },
-            async authorize(credentials: any): Promise<any> {
+            async authorize(credentials: Record<string, string> | undefined) {
                 await dbConnect();
                 try {
+                    if (!credentials?.email && !credentials?.identifier) {
+                        return null;
+                    }
+                    if (!credentials?.password) {
+                        return null;
+                    }
+
                     const user = await UserModel.findOne({
                         $or: [
-                            { email: credentials.identifier },
-                            { username: credentials.identifier },
+                            { email: credentials.email || credentials.identifier },
+                            { username: credentials.email || credentials.identifier },
                         ]
                     })
                     // console.log(user);
-                    
+
                     if (!user) {
-                        throw new Error("user not found ")
+                        return null;
                     }
                     if (!user.isverifed) {
-                        throw new Error("User is not verified, pls verify")
+                        return null;
                     }
                     const isPasswordCorrect = await bcrypt.compare(credentials.password, user.password)
                     // credentials.password returns plain passwrod text which the user enters during login and  user.password returns hashed password from database
                     if (isPasswordCorrect) {
-                        return user
+                        return {
+                            id: user._id?.toString() || '',
+                            _id: user._id?.toString(),
+                            email: user.email,
+                            username: user.username,
+                            isVerified: user.isverifed,
+                            isAcceptingMessages: user.isAcceptingMessages
+                        }
                     }
                     else {
-                        throw new Error("incorrect password")
+                        return null;
                     }
-                } catch (error: any) {
-                    throw new Error(error)
+                } catch (error) {
+                    console.error('Authentication error:', error);
+                    return null;
                 }
             }
         })
@@ -61,14 +75,14 @@ export const authOptions: NextAuthOptions = {
             return token
         },
         async session({ session, token }) {
-            if(token){
+            if (token) {
                 session.user._id = token._id
-                session.user.isVerified =token.isVerified
+                session.user.isVerified = token.isVerified
                 session.user.isAcceptingMessages = token.isAcceptingMessages
                 session.user.username = token.username
             }
             return session
         },
     },
-    secret: process.env.NEXTAUTH_SECRET 
+    secret: process.env.NEXTAUTH_SECRET
 }

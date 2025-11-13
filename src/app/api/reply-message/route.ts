@@ -1,6 +1,5 @@
 import dbConnect from "@/lib/dbConnect";
 import UserModel from "@/model/user.model";
-import { Message } from "@/model/user.model";
 import { ApiResponse } from "@/types/apiResponse";
 import { getServerSession } from "next-auth";
 import { NextResponse } from "next/server";
@@ -48,9 +47,10 @@ export async function POST(request: Request) {
         }
         return NextResponse.json<ApiResponse>({ success: true, message: "message sent successfully" }, { status: 200 })
     } catch (error) {
+        console.error('Error sending reply:', error);
         return NextResponse.json<ApiResponse>(
-            { success: false, message: 'Message ID and reply content are required' },
-            { status: 400 }
+            { success: false, message: 'Failed to send reply' },
+            { status: 500 }
         );
     }
 }

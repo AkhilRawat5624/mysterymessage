@@ -1,23 +1,20 @@
 "use client"
 import React, { useEffect, useState } from "react"
-import { useDebounceValue, useDebounceCallback} from "usehooks-ts";
+import {useDebounceCallback} from "usehooks-ts";
 import { z } from "zod"
 import Link from "next/link";
 import { toast } from "sonner"
 import { useRouter } from "next/navigation";
-import Loader2, { Loader, Loader2Icon, LucideLoader2 } from "lucide-react"
-// import { Form, useForm } from "react-hook-form";
+import  { Loader2Icon, LucideLoader2 } from "lucide-react"
 import { useForm } from "react-hook-form"
-import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form"
+import { Form, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form"
 
 import { zodResolver } from "@hookform/resolvers/zod"
 import { signupSchema } from "@/schemas/signupSchema";
-import axios, { Axios, AxiosError } from "axios"
+import axios, { AxiosError } from "axios"
 import { ApiResponse } from "@/types/apiResponse";
-// import { FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input";
-import { log } from "console";
 const Page = () => {
   const [username, setUsername] = useState('');
   const [usernameMessage, setUsernameMessage] = useState('')
@@ -65,7 +62,7 @@ const Page = () => {
       setisFormSubmitting(false)
     } catch (error) {
       const axiosError = error as AxiosError<ApiResponse>;
-      let errorMessage = axiosError.response?.data.message;
+      const errorMessage = axiosError.response?.data.message;
       toast("Signup Failed ", {
         description: errorMessage
       })

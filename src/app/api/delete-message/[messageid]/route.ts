@@ -2,7 +2,6 @@ import dbConnect from "@/lib/dbConnect";
 import UserModel from "@/model/user.model";
 import { authOptions } from "../../auth/[...nextauth]/options";
 import { getServerSession, User } from "next-auth";
-import mongoose from "mongoose";
 
 
 export async function DELETE(req: Request, { params }: { params: { messageid: string } }) {
@@ -38,7 +37,7 @@ export async function DELETE(req: Request, { params }: { params: { messageid: st
             message: "Message Deleted successfully"
         }, { status: 200 })
     } catch (error) {
-        console.log("error in delete message route")
+        console.error("error in delete message route", error);
         return Response.json({
             success: false,
             message: "Error Deleting Message"

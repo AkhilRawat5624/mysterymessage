@@ -1,4 +1,3 @@
-import { log } from "console";
 import mongoose from "mongoose";
 
 type ConnectionObject = {
@@ -7,7 +6,7 @@ type ConnectionObject = {
 const connection: ConnectionObject = {}
 async function dbConnect(): Promise<void> {
     if (connection.isConnected) {
-        console.log("connection established already");3
+        console.log("connection established already");
         return
 
     }

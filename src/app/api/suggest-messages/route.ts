@@ -17,7 +17,8 @@ export async function POST() {
     try {
         const result = await model.generateContent(prompt);
         return NextResponse.json({ message: result.response.text() });
-    } catch (error: any) {
+    } catch (error) {
+        console.error('Error generating suggestions:', error);
         return NextResponse.json({
             success: false,
             message: "Something went wrong"

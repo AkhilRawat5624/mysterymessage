@@ -1,6 +1,5 @@
 import dbConnect from "@/lib/dbConnect";
 import UserModel from "@/model/user.model";
-import { date, success } from "zod";
 
 export async function POST(req: Request) {
     await dbConnect()
@@ -47,7 +46,7 @@ export async function POST(req: Request) {
             })
         }
     } catch (error) {
-        console.error("error verifying user, error");
+        console.error("error verifying user", error);
 
         return Response.json({
             success: false,
